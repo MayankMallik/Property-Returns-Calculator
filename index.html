@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Returns Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="calculator-card">
+        <h2>Property Returns Calculator</h2>
+        
+        <div class="input-group">
+            <label for="purchasePrice">Purchase Price (₹)</label>
+            <input type="text" id="purchasePrice" inputmode="numeric" placeholder="e.g. 50,00,000">
+        </div>
+
+        <div class="input-group">
+            <label>Purchase Date</label>
+            <div class="date-row">
+                <select id="pYear"><option value="" disabled selected>Select Year</option></select>
+                <select id="pMonth">
+                    <option value="" disabled selected>Select Month</option>
+                    <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
+                    <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
+                    <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
+                    <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="salePrice">Sale Price (₹)</label>
+            <input type="text" id="salePrice" inputmode="numeric" placeholder="e.g. 75,00,000">
+        </div>
+
+        <div class="input-group">
+            <label>Sale Date</label>
+            <div class="date-row">
+                <select id="sYear"><option value="" disabled selected>Select Year</option></select>
+                <select id="sMonth">
+                    <option value="" disabled selected>Select Month</option>
+                    <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
+                    <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
+                    <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
+                    <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="error-message" style="color: #d9534f; font-size: 0.9rem; margin-bottom: 10px; display: none; text-align: center; font-weight: bold;">
+            Sale date must be after purchase date.
+        </div>
+
+        <button onclick="calculatePropertyReturns()"><b>Calculate</b></button>
+
+        <div class="results" id="results" style="display: none;">
+            <div class="result-item">
+                <span>Annual Returns:</span>
+                <span id="annualReturns">0%</span>
+            </div>
+            <div class="result-item total">
+                <span>Real Returns:<br>(Adjusted for Inflation - 6%)</span>
+                <span id="realReturns">0%</span>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
