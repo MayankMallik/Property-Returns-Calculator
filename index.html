@@ -9,51 +9,125 @@
 <body>
     <div class="calculator-card">
         <h2>Property Returns Calculator</h2>
+
+        <!-- Mode Toggles -->
+        <div class="toggle-container-grid">
+            <div class="toggle-container">
+                <button id="houseBtn" class="toggle-btn active" onclick="setAsset('House')">House</button>
+                <button id="plotBtn" class="toggle-btn" onclick="setAsset('Plot')">Plot</button>
+            </div>
+            <div class="toggle-container">
+                <button id="withLoanBtn" class="toggle-btn active" onclick="setLoan('With Loan')">With Loan</button>
+                <button id="withoutLoanBtn" class="toggle-btn" onclick="setLoan('Without Loan')">Without Loan</button>
+            </div>
+        </div>
         
-        <div class="input-group">
-            <label for="purchasePrice">Purchase Price (₹)</label>
-            <input type="text" id="purchasePrice" inputmode="numeric" placeholder="e.g. 50,00,000">
-        </div>
+        <!-- Input Grid: The 'without-loan-active' class is toggled here via JS -->
+        <div class="input-grid" id="inputGrid">
+            
+            <!-- Plot Specific Fields (Hidden by default) -->
+            <div class="input-group plot-only" id="plotSizeGroup">
+                <label for="plotSize">Plot Size (sqft)<span class="required">*</span></label>
+                <input type="text" id="plotSize" inputmode="numeric" placeholder="e.g. 1,200">
+            </div>
 
-        <div class="input-group">
-            <label>Purchase Date</label>
-            <div class="date-row">
-                <select id="pYear"><option value="" disabled selected>Select Year</option></select>
-                <select id="pMonth">
-                    <option value="" disabled selected>Select Month</option>
-                    <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
-                    <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
-                    <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
-                    <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
-                </select>
+            <div class="input-group plot-only" id="purchaseRateGroup">
+                <label for="purchaseRate">Purchase Rate (per sqft) (₹)<span class="required">*</span></label>
+                <input type="text" id="purchaseRate" inputmode="numeric" placeholder="e.g. 5,000">
+            </div>
+
+            <!-- Main Inputs -->
+            <div class="input-group" id="downPaymentGroup">
+                <label for="downPayment"><span id="paymentLabel">Down Payment</span> (₹)<span class="required">*</span></label>
+                <input type="text" id="downPayment" inputmode="numeric" placeholder="e.g. 10,00,000">
+            </div>
+
+            <div class="input-group" id="regCostGroup">
+                <label for="regCost">Registration Cost (₹)<span class="required">*</span></label>
+                <input type="text" id="regCost" inputmode="numeric" placeholder="e.g. 1,00,000">
+            </div>
+
+            <div class="input-group" id="buyBrokerageGroup">
+                <label for="buyBrokerage">Brokerage Cost (Buy) (₹)</label>
+                <input type="text" id="buyBrokerage" inputmode="numeric" placeholder="e.g. 1,00,000">
+            </div>
+
+            <!-- Loan Specific Fields -->
+            <div class="input-group loan-only" id="emiGroup">
+                <label for="emi">Monthly EMI (₹)<span class="required">*</span></label>
+                <input type="text" id="emi" inputmode="numeric" placeholder="e.g. 50,000">
+            </div>
+
+            <div class="input-group loan-only" id="installmentsGroup">
+                <label for="installments">No. of Monthly EMIs Paid<span class="required">*</span></label>
+                <input type="text" id="installments" inputmode="numeric" placeholder="e.g. 24">
+            </div>
+
+            <!-- Dates and Pricing -->
+            <div class="input-group" id="pDateGroup">
+                <label>Purchase Date<span class="required">*</span></label>
+                <div class="date-row">
+                    <select id="pYear"><option value="" disabled selected>Year</option></select>
+                    <select id="pMonth">
+                        <option value="" disabled selected>Month</option>
+                        <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
+                        <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
+                        <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
+                        <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="input-group" id="sDateGroup">
+                <label>Sale Date<span class="required">*</span></label>
+                <div class="date-row">
+                    <select id="sYear"><option value="" disabled selected>Year</option></select>
+                    <select id="sMonth">
+                        <option value="" disabled selected>Month</option>
+                        <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
+                        <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
+                        <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
+                        <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group" id="salePriceGroup">
+                <label for="salePrice"><span id="saleLabel">Sale Price</span> (₹)<span class="required">*</span></label>
+                <input type="text" id="salePrice" inputmode="numeric" placeholder="e.g. 80,00,000">
+            </div>
+            
+            <div class="input-group house-only" id="monthlyRentGroup">
+                <label for="monthlyRent">Monthly Rent (₹)</label>
+                <input type="text" id="monthlyRent" inputmode="numeric" placeholder="e.g. 20,000">
+            </div>
+        
+            <div class="input-group house-only" id="rentMonthsGroup">
+                <label for="rentMonths">No. of Months Rent Received</label>
+                <input type="text" id="rentMonths" inputmode="numeric" placeholder="e.g. 12">
+            </div>
+
+            <!-- Loan Closure (Loan Only) -->
+            <div class="input-group loan-only" id="closureGroup">
+                <label for="closureAmount">Loan Closure Amount(₹)<span class="required">*</span></label>
+                <input type="text" id="closureAmount" inputmode="numeric" placeholder="e.g. 35,00,000">
+            </div>
+
+            <div class="input-group" id="saleBrokerageGroup">
+                <label for="saleBrokerage">Brokerage Cost (Sale) (₹)</label>
+                <input type="text" id="saleBrokerage" inputmode="numeric" placeholder="e.g. 1,00,000">
             </div>
         </div>
 
-        <div class="input-group">
-            <label for="salePrice">Sale Price (₹)</label>
-            <input type="text" id="salePrice" inputmode="numeric" placeholder="e.g. 75,00,000">
-        </div>
-
-        <div class="input-group">
-            <label>Sale Date</label>
-            <div class="date-row">
-                <select id="sYear"><option value="" disabled selected>Select Year</option></select>
-                <select id="sMonth">
-                    <option value="" disabled selected>Select Month</option>
-                    <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
-                    <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
-                    <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
-                    <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
-                </select>
-            </div>
-        </div>
-
+        <!-- Error Message -->
         <div id="error-message" style="color: #d9534f; font-size: 0.9rem; margin-bottom: 10px; display: none; text-align: center; font-weight: bold;">
             Sale date must be after purchase date.
         </div>
 
-        <button onclick="calculatePropertyReturns()"><b>Calculate</b></button>
+        <!-- Calculate Button -->
+        <button class="calc-btn" onclick="calculate()"><b>Calculate</b></button>
 
+        <!-- Results Section -->
         <div class="results" id="results" style="display: none;">
             <div class="result-item">
                 <span>Annual Returns:</span>
@@ -65,6 +139,7 @@
             </div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
