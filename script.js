@@ -1,4 +1,17 @@
-// 1. DYNAMIC DESCENDING YEAR POPULATION (1960 limit)
+let currentAsset = 'House';
+let currentLoan = 'With Loan';
+
+const CONFIG = {
+    'House': {
+        'With Loan': { label: 'Down Payment', saleLabel: 'Sale Price', showLoan: true, showPlot: false },
+        'Without Loan': { label: 'Purchase Price', saleLabel: 'Sale Price', showLoan: false, showPlot: false }
+    },
+    'Plot': {
+        'With Loan': { label: 'Down Payment', saleLabel: 'Sale Rate (per sqft)', showLoan: true, showPlot: true },
+        'Without Loan': { label: 'Purchase Price', saleLabel: 'Sale Rate (per sqft)', showLoan: false, showPlot: true }
+    }
+};
+
 function initYears() {
     const pYear = document.getElementById('pYear');
     const sYear = document.getElementById('sYear');
@@ -14,24 +27,71 @@ function initYears() {
         sYear.appendChild(opt);
     }
 }
-initYears();
 
-// 2. ERROR CLEARING LISTENERS
+function refreshUI() {
+    const state = CONFIG[currentAsset][currentLoan];
+    
+    // Update Labels
+    document.getElementById('paymentLabel').innerText = state.label;
+    document.getElementById('saleLabel').innerText = state.saleLabel;
+    
+    // Toggle Visibility of Groups
+    document.querySelectorAll('.loan-only').forEach(el => el.style.display = state.showLoan ? 'block' : 'none');
+    document.querySelectorAll('.plot-only').forEach(el => el.style.display = state.showPlot ? 'block' : 'none');
+
+    // RE-APPLYING THE SPECIAL LAYOUT:
+    // Only apply the 'without-loan-active' class if it's House + Without Loan
+    const grid = document.getElementById('inputGrid');
+    if (currentAsset === 'House' && currentLoan === 'Without Loan') {
+        grid.classList.add('without-loan-active');
+    } else {
+        grid.classList.remove('without-loan-active');
+    }
+    if (currentAsset === 'House' && currentLoan === 'Without Loan') {
+        grid.classList.add('without-loan-active');
+        // Add this line to change the placeholder:
+        document.getElementById('downPayment').placeholder = "e.g. 50,00,000";
+    } else {
+        grid.classList.remove('without-loan-active');
+        // Reset it back to your default for other modes:
+        document.getElementById('downPayment').placeholder = "e.g. 10,00,000";
+    }
+
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('error-message').style.display = 'none';
+}
+
+function setAsset(asset) {
+    currentAsset = asset;
+    document.getElementById('houseBtn').classList.toggle('active', asset === 'House');
+    document.getElementById('plotBtn').classList.toggle('active', asset === 'Plot');
+    refreshUI();
+}
+
+function setLoan(loan) {
+    currentLoan = loan;
+    document.getElementById('withLoanBtn').classList.toggle('active', loan === 'With Loan');
+    document.getElementById('withoutLoanBtn').classList.toggle('active', loan === 'Without Loan');
+    refreshUI();
+}
+
+// Initial setup
+initYears();
+refreshUI(); // Ensures Plot boxes are hidden on start[cite: 2]
+
 document.querySelectorAll('input').forEach(input => {
     input.addEventListener('input', function() { 
         formatNumber(this); 
-        this.classList.remove('error'); 
+        this.classList.remove('error');
     });
 });
 
 document.querySelectorAll('select').forEach(select => {
     select.addEventListener('change', function() {
         this.classList.remove('error');
-        document.getElementById('error-message').style.display = 'none';
     });
 });
 
-// 3. FORMATTING LOGIC
 function formatNumber(input) {
     let value = input.value.replace(/,/g, '');
     value = value.replace(/[^0-9.]/g, ''); 
@@ -50,60 +110,60 @@ function formatNumber(input) {
     input.value = value;
 }
 
-// 4. CALCULATION
-function calculatePropertyReturns() {
-    const requiredFields = ['purchasePrice', 'salePrice', 'pYear', 'pMonth', 'sYear', 'sMonth'];
-    const resultsDiv = document.getElementById('results');
-    const dateErrorDiv = document.getElementById('error-message');
+function calculate() {
+    const state = CONFIG[currentAsset][currentLoan];
+    let required = ['downPayment', 'regCost', 'salePrice', 'pYear', 'pMonth', 'sYear', 'sMonth'];
+    
+    if (state.showLoan) required.push('emi', 'installments', 'closureAmount');
+    if (state.showPlot) required.push('plotSize', 'purchaseRate');
+
     let isValid = true;
-
-    // Reset UI state before new calculation
-    resultsDiv.style.display = 'none';
-    dateErrorDiv.style.display = 'none';
-
-    requiredFields.forEach(id => {
-        const element = document.getElementById(id);
-        if (element.value === "" || element.value === null) {
-            element.classList.add('error');
+    required.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el.value) {
+            el.classList.add('error');
             isValid = false;
         } else {
-            element.classList.remove('error');
+            el.classList.remove('error');
         }
     });
 
     if (!isValid) return;
 
-    const pPrice = parseFloat(document.getElementById('purchasePrice').value.replace(/,/g, ''));
-    const sPrice = parseFloat(document.getElementById('salePrice').value.replace(/,/g, ''));
+    const getVal = id => parseFloat(document.getElementById(id).value.replace(/,/g, '')) || 0;
     
+    let totalOutflow, totalInflow;
+
+    if (currentAsset === 'House') {
+        totalOutflow = getVal('downPayment') + getVal('regCost') + getVal('buyBrokerage') + (state.showLoan ? (getVal('emi') * getVal('installments')) : 0);
+        totalInflow = getVal('salePrice') - (state.showLoan ? getVal('closureAmount') : 0) - getVal('saleBrokerage');
+    } else if (currentAsset === 'Plot') {
+        totalOutflow = getVal('downPayment') + getVal('regCost') + getVal('buyBrokerage') + (state.showLoan ? (getVal('emi') * getVal('installments')) : 0);
+        // Formula: (Plot Size * Sale Rate) - optional closure - optional brokerage[cite: 2]
+        totalInflow = (getVal('plotSize') * getVal('salePrice')) - (state.showLoan ? getVal('closureAmount') : 0) - getVal('saleBrokerage');
+    }
+
     const startMonth = parseInt(document.getElementById('pMonth').value);
     const startYear = parseInt(document.getElementById('pYear').value);
     const endMonth = parseInt(document.getElementById('sMonth').value);
     const endYear = parseInt(document.getElementById('sYear').value);
 
     let totalMonths = (endYear - startYear) * 12 + (endMonth - startMonth);
-    // Precision fix: round time to ensure consistency with manual math
-    const t = Math.round((totalMonths / 12) * 10000) / 10000;
+    const t = totalMonths / 12;
 
     if (t <= 0) {
-        dateErrorDiv.style.display = 'block';
-        document.getElementById('sYear').classList.add('error');
-        document.getElementById('sMonth').classList.add('error');
+        document.getElementById('error-message').style.display = 'block';
         return;
     }
 
-    const annualValue = (Math.pow((sPrice / pPrice), (1 / t)) - 1) * 100;
+    const annualValue = (Math.pow((totalInflow / totalOutflow), (1 / t)) - 1) * 100;
     const realValue = annualValue - 6;
 
-    // Set Annual Returns Value
-    const annualSpan = document.getElementById('annualReturns');
-    annualSpan.innerText = annualValue.toFixed(2) + "%";
-    annualSpan.style.color = annualValue >= 0 ? "#28a745" : "#d9534f";
+    document.getElementById('annualReturns').innerText = annualValue.toFixed(2) + "%";
+    document.getElementById('annualReturns').style.color = annualValue >= 0 ? "#28a745" : "#d9534f";
 
-    // Set Real Returns Value
-    const realSpan = document.getElementById('realReturns');
-    realSpan.innerText = realValue.toFixed(2) + "%";
-    realSpan.style.color = realValue >= 0 ? "#28a745" : "#d9534f";
+    document.getElementById('realReturns').innerText = realValue.toFixed(2) + "%";
+    document.getElementById('realReturns').style.color = realValue >= 0 ? "#28a745" : "#d9534f";
 
     document.getElementById('results').style.display = 'block';
 }
