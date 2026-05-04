@@ -7,20 +7,58 @@ body {
 
 .calculator-card {
     background: transparent;
-    border-radius: 8px;
-    max-width: 400px;
+    max-width: 750px;
     width: 100%;
 }
 
 h2 { color: #333; margin-bottom: 20px; text-align: center; }
 
-.input-group {
+.toggle-container-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.toggle-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.toggle-btn {
+
+    width: 235px;
+    padding: 10px;
+    background-color: #e9ecef;
+    color: #495057;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+.toggle-btn.active {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.toggle-btn:hover {
+    background-color: #218838;
+    color: white;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
     margin-bottom: 15px;
 }
 
-input[type="month"] {
-    font-family: inherit;
-}
+.input-group { margin-bottom: 10px; }
 
 label {
     display: block;
@@ -28,7 +66,12 @@ label {
     font-weight: bold;
 }
 
-input {
+.required {
+    color: #d9534f;
+    margin-left: 2px;
+}
+
+input, select {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
@@ -37,20 +80,25 @@ input {
     font-size: 1.2rem;
 }
 
-button {
+.date-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.calc-btn {
     width: 100%;
     padding: 12px;
-    background-color: #28a745;
+    background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
+    margin-top: 10px;
 }
 
-button:hover {
-    background-color: #218838;
-}
+.calc-btn:hover { background-color: #0056b3; }
 
 .results {
     margin-top: 20px;
@@ -65,30 +113,9 @@ button:hover {
     color: black;
 }
 
-.results span {
-    font-weight: bold;
-}
+.results span { font-weight: bold; }
 
-/* Red Border for Validation */
 .error {
     border: 1.5px solid #d9534f !important;
     background-color: #fff9f9;
 }
-
-.date-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Split into 2 equal columns */
-    gap: 10px; /* Space between Year and Month */
-}
-
-select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1.1rem;
-    background-color: white;
-    cursor: pointer;
-    font-family: inherit;
-}
-
