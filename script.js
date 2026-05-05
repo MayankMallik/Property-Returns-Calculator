@@ -12,6 +12,26 @@ const CONFIG = {
     }
 };
 
+// NEW: Lakh/Crore formatting logic[cite: 4]
+const formatToWords = num => {
+    if (num >= 10000000) { // Crore
+        const value = Math.ceil((num / 10000000) * 100) / 100;
+        return `₹${value.toFixed(2)} Crore`;
+    } else if (num >= 100000) { // Lakh
+        const value = Math.ceil((num / 100000) * 100) / 100;
+        return `₹${value.toFixed(2)} Lakh`;
+    } else {
+        let integer = Math.ceil(num).toString();
+        if (integer.length > 3) {
+            let lastThree = integer.slice(-3);
+            let otherNumbers = integer.slice(0, -3);
+            otherNumbers = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+            integer = otherNumbers + "," + lastThree;
+        }
+        return "₹" + integer;
+    }
+};
+
 function initYears() {
     const pYear = document.getElementById('pYear');
     const sYear = document.getElementById('sYear');
@@ -31,30 +51,38 @@ function initYears() {
 function refreshUI() {
     const state = CONFIG[currentAsset][currentLoan];
     
-    // Update Labels
     document.getElementById('paymentLabel').innerText = state.label;
     document.getElementById('saleLabel').innerText = state.saleLabel;
     
-    // Toggle Visibility of Groups
     document.querySelectorAll('.loan-only').forEach(el => el.style.display = state.showLoan ? 'block' : 'none');
     document.querySelectorAll('.plot-only').forEach(el => el.style.display = state.showPlot ? 'block' : 'none');
+    document.querySelectorAll('.house-only').forEach(el => el.style.display = (currentAsset === 'House') ? 'block' : 'none');
 
-    // RE-APPLYING THE SPECIAL LAYOUT:
-    // Only apply the 'without-loan-active' class if it's House + Without Loan
-    const grid = document.getElementById('inputGrid');
-    if (currentAsset === 'House' && currentLoan === 'Without Loan') {
-        grid.classList.add('without-loan-active');
+    // Hide Purchase Price specifically for Plot + Without Loan[cite: 1]
+    const downPaymentGroup = document.getElementById('downPaymentGroup');
+    if (currentAsset === 'Plot' && currentLoan === 'Without Loan') {
+        downPaymentGroup.style.display = 'none';
     } else {
-        grid.classList.remove('without-loan-active');
+        downPaymentGroup.style.display = 'block';
     }
+
+    const grid = document.getElementById('inputGrid');
+    const downPaymentInput = document.getElementById('downPayment');
+    const salePriceInput = document.getElementById('salePrice');
+    
+    // Update Placeholders[cite: 2]
+    if (currentAsset === 'Plot') {
+        salePriceInput.placeholder = "e.g. 8,000"; // Updated placeholder for Sale Rate[cite: 4]
+    } else {
+        salePriceInput.placeholder = "e.g. 80,00,000";
+    }
+
     if (currentAsset === 'House' && currentLoan === 'Without Loan') {
         grid.classList.add('without-loan-active');
-        // Add this line to change the placeholder:
-        document.getElementById('downPayment').placeholder = "e.g. 50,00,000";
+        downPaymentInput.placeholder = "e.g. 50,00,000";
     } else {
         grid.classList.remove('without-loan-active');
-        // Reset it back to your default for other modes:
-        document.getElementById('downPayment').placeholder = "e.g. 10,00,000";
+        downPaymentInput.placeholder = "e.g. 10,00,000";
     }
 
     document.getElementById('results').style.display = 'none';
@@ -75,23 +103,6 @@ function setLoan(loan) {
     refreshUI();
 }
 
-// Initial setup
-initYears();
-refreshUI(); // Ensures Plot boxes are hidden on start[cite: 2]
-
-document.querySelectorAll('input').forEach(input => {
-    input.addEventListener('input', function() { 
-        formatNumber(this); 
-        this.classList.remove('error');
-    });
-});
-
-document.querySelectorAll('select').forEach(select => {
-    select.addEventListener('change', function() {
-        this.classList.remove('error');
-    });
-});
-
 function formatNumber(input) {
     let value = input.value.replace(/,/g, '');
     value = value.replace(/[^0-9.]/g, ''); 
@@ -110,10 +121,24 @@ function formatNumber(input) {
     input.value = value;
 }
 
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', function() { 
+        formatNumber(this); 
+        this.classList.remove('error');
+    });
+});
+
+document.querySelectorAll('select').forEach(select => {
+    select.addEventListener('change', function() {
+        this.classList.remove('error');
+    });
+});
+
 function calculate() {
     const state = CONFIG[currentAsset][currentLoan];
-    let required = ['downPayment', 'regCost', 'salePrice', 'pYear', 'pMonth', 'sYear', 'sMonth'];
+    let required = ['regCost', 'salePrice', 'pYear', 'pMonth', 'sYear', 'sMonth'];
     
+    if (!(currentAsset === 'Plot' && currentLoan === 'Without Loan')) required.push('downPayment');
     if (state.showLoan) required.push('emi', 'installments', 'closureAmount');
     if (state.showPlot) required.push('plotSize', 'purchaseRate');
 
@@ -136,10 +161,10 @@ function calculate() {
 
     if (currentAsset === 'House') {
         totalOutflow = getVal('downPayment') + getVal('regCost') + getVal('buyBrokerage') + (state.showLoan ? (getVal('emi') * getVal('installments')) : 0);
-        totalInflow = getVal('salePrice') - (state.showLoan ? getVal('closureAmount') : 0) - getVal('saleBrokerage');
+        totalInflow = getVal('salePrice') + (getVal('monthlyRent') * getVal('rentMonths')) - (state.showLoan ? getVal('closureAmount') : 0) - getVal('saleBrokerage');
     } else if (currentAsset === 'Plot') {
-        totalOutflow = getVal('downPayment') + getVal('regCost') + getVal('buyBrokerage') + (state.showLoan ? (getVal('emi') * getVal('installments')) : 0);
-        // Formula: (Plot Size * Sale Rate) - optional closure - optional brokerage[cite: 2]
+        let purchaseCost = (currentLoan === 'Without Loan') ? (getVal('plotSize') * getVal('purchaseRate')) : getVal('downPayment');
+        totalOutflow = purchaseCost + getVal('regCost') + getVal('buyBrokerage') + (state.showLoan ? (getVal('emi') * getVal('installments')) : 0);
         totalInflow = (getVal('plotSize') * getVal('salePrice')) - (state.showLoan ? getVal('closureAmount') : 0) - getVal('saleBrokerage');
     }
 
@@ -156,9 +181,14 @@ function calculate() {
         return;
     }
 
+    // CAGR Formula: ((Inflow / Outflow)^(1/t) - 1) * 100[cite: 3]
     const annualValue = (Math.pow((totalInflow / totalOutflow), (1 / t)) - 1) * 100;
     const realValue = annualValue - 6;
 
+    // Apply Lakh/Crore logic to the result display[cite: 4]
+    document.getElementById('totalInvestment').innerText = formatToWords(totalOutflow);
+    document.getElementById('totalSale').innerText = formatToWords(totalInflow);
+    
     document.getElementById('annualReturns').innerText = annualValue.toFixed(2) + "%";
     document.getElementById('annualReturns').style.color = annualValue >= 0 ? "#28a745" : "#d9534f";
 
@@ -167,3 +197,6 @@ function calculate() {
 
     document.getElementById('results').style.display = 'block';
 }
+
+initYears();
+refreshUI();
