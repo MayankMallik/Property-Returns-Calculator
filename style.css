@@ -119,3 +119,9 @@ input, select {
     border: 1.5px solid #d9534f !important;
     background-color: #fff9f9;
 }
+
+.disclaimer {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 2rem;
+}
